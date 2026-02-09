@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DexEvolve: Evolutionary Optimization for Robust and Diverse Dexterous Grasp Synthesis</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">DexEvolve: Evolutionary Optimization for Robust and Diverse Dexterous Grasp Synthesis</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="#">René Zurbrügg</a>,</span>
+            <span class="author-block">
+              <a href="#">Andrei Cramariuc</a>,</span>
+            <span class="author-block">
+              <a href="#">Marco Hutter</a>
+            </span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">ETH Zürich</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="#" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a class="external-link button is-normal is-rounded is-dark" disabled style="opacity: 0.5; cursor: not-allowed;">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code (Coming Soon)</span>
+                  </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser">
+  <div class="container is-fullhd">
+    <div class="hero-body">
+      <img src="images/teaser_wide.png" alt="DexEvolve - Diverse Dexterous Grasp Synthesis" style="width: 100%; max-width: 100%; border-radius: 10px;">
+      <h2 class="subtitle has-text-centered" style="margin-top: 20px;">
+        DexEvolve generates diverse, physically feasible dexterous grasps through evolutionary refinement in high-fidelity simulation. 
+      </h2>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Dexterous grasping is fundamental to robotics, yet data-driven grasp prediction relies on large, diverse datasets that are costly to generate and typically limited to a narrow set of gripper morphologies. Analytical grasp synthesis can be used to scale data collection, but necessary simplifying assumptions often yield physically infeasible grasps that need to be filtered in high-fidelity simulators, significantly reducing the number of grasps and their diversity.
+          </p>
+          <p>
+            We propose a scalable generate-and-refine pipeline for synthesizing large-scale, diverse, and physically feasible grasps. Instead of using high-fidelity simulators solely for verification and filtering, we leverage them as an optimization stage that continuously improves grasp quality without discarding precomputed candidates. More specifically, we initialize an evolutionary search with a seed set of analytically generated, potentially suboptimal grasps. We then refine these proposals directly in a high-fidelity simulator (Isaac Sim) using an asynchronous, gradient-free evolutionary algorithm, improving stability while maintaining diversity.
+          </p>
+          <p>
+            We further distill the refined grasp distribution into a diffusion model for robust real-world deployment, and highlight the role of diversity for both effective training and reliability during deployment. Experiments on a newly introduced handles dataset and DexGraspNet demonstrate improved grasp stability and diversity relative to current baselines.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Method</h2>
+        <div class="content has-text-justified" style="margin-bottom: 30px;">
+          <p style="font-size: 1.1em;">
+            Our approach combines analytical initialization for diversity, evolutionary refinement in high-fidelity simulation for physical feasibility, and diffusion-based distillation for real-world deployment from partial observations.
+          </p>
+        </div>
+        <div class="content has-text-centered">
+          <img src="images/overivew_pc.png" alt="Method Overview" style="max-width: 100%;">
+          <p style="margin-top: 10px;"><em>Three-stage pipeline: analytical initialization → evolutionary refinement → diffusion distillation</em></p>
+        </div>
+
+        <div class="content has-text-justified" style="margin-top: 30px;">
+          <p>
+            <strong>Analytical Initialization.</strong> We begin with a diverse set of grasp candidates generated using GraspQP, an analytical optimizer that samples contact points on object surfaces and optimizes for force closure. While many of these initial grasps may be dynamically infeasible due to simplified contact models, they provide good coverage of different grasp modes and taxonomies.
+          </p>
+          <p>
+            <strong>Evolutionary Refinement.</strong> Rather than discarding infeasible grasps, we refine them directly in Isaac Sim using an asynchronous genetic algorithm. Each grasp is evaluated by applying forces along six canonical directions and measuring stability. Key innovations include: (1) density-aware selection that penalizes overrepresented grasp clusters, (2) archive-based insertion where new candidates are only added if sufficiently novel or better than their nearest neighbor, (3) structured crossover that swaps entire pose or joint configurations, and (4) contact resampling using farthest point sampling. The evolutionary process runs for 10,000 steps with populations of 32-128 individuals, leveraging massive parallelization in Isaac Sim.
+          </p>
+        </div>
+
+        <div class="content has-text-justified" style="margin-top: 30px;">
+          <p>
+            <strong>Diffusion Distillation.</strong> To enable real-world deployment from partial point clouds, we train a conditional diffusion model on the refined grasp dataset, building upon the DexGraspAnything architecture. The model uses PointTransformerV3 for encoding point clouds and a Diffusion Transformer for grasp generation (9.7M parameters total). We diffuse a 21-dimensional grasp vector (position, orientation, joint angles) conditioned on observed point clouds and hand keypoints. The training objective combines denoising, penetration penalties, and keypoint consistency losses to ensure physically feasible predictions.
+          </p>
+        </div>
+
+        <div class="content has-text-justified" style="margin-top: 30px;">
+          <p>
+            <strong>Preference Alignment.</strong> A key advantage of our evolutionary approach is the ability to steer grasp synthesis toward specific objectives without requiring differentiable metrics. This can be done by e.g. adding energy terms based on the force-closure conditions and/or biasing the fitness with learned reward models from human preference selection.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Results</h2>
+
+    <!-- Metrics explanation -->
+    <div class="content has-text-justified">
+      <h3 class="title is-5">Evaluation Metrics</h3>
+      <p>
+        We evaluate grasp synthesis methods across multiple dimensions to capture both quality and diversity:
+      </p>
+      <ul>
+        <li><strong>Success Rate:</strong> Percentage of grasps that remain stable when external forces are applied (pull-force test in Isaac Lab).</li>
+        <li><strong>Unique Grasp Rate (UGR) @ T:</strong> Number of distinct, successful grasps at similarity threshold T. We measure at both 2cm (strict diversity) and 20cm (coarse diversity) to capture grasp variety across different spatial resolutions.</li>
+        <li><strong>Good@2cm / Good@20cm:</strong> The count of unique successful grasps at each threshold, measuring both stability and diversity simultaneously.</li>
+        <li><strong>Entropy (H):</strong> Measures diversity in configuration space by computing joint entropy over hand position, orientation, and finger joint angles. Higher entropy indicates broader coverage of grasp modes.</li>
+      </ul>
+      <p>
+        Together, these metrics capture the trade-off between <em>grasp quality</em> (success rate) and <em>grasp diversity</em> (UGR, entropy). 
+      </p>
+    </div>
+
+    <div class="content has-text-justified" style="margin-top: 30px;">
+      <p>
+        We evaluate our approach on both everyday objects and handle manipulation tasks. Our experiments demonstrate that evolutionary refinement improves grasp quality while maintaining diversity across different gripper poses and object interactions.
+      </p>
+    </div>
+
+    <div class="content has-text-centered">
+      <img src="images/maindata.png" alt="Results" style="max-width: 100%;">
+      <p style="margin-top: 10px;"><em>Evolutionary refinement improves both stability and diversity across objects and handles</em></p>
+    </div>
+
+    <div class="content has-text-justified" style="margin-top: 30px;">
+      <p>
+        The radar plots show that evolutionary refinement (with 32 or 128 GraspQP seeds) consistently achieves higher success rates and unique grasp counts compared to analytical baselines. Notably, refinement from random initialization reaches high success but lower diversity, highlighting the importance of analytical seeding for maintaining multimodal grasp distributions.
+      </p>
+    </div>
+
+    <div class="columns is-centered" style="margin-top: 40px;">
+      <div class="column">
+        <img src="images/combined_metrics_bars.png" alt="Metrics" style="max-width: 100%;">
+        <p class="has-text-centered" style="margin-top: 10px;"><em>Evolution outperforms diffusion training</em></p>
+      </div>
+      <div class="column">
+        <img src="images/metrics_evolution_combined_axes.png" alt="Convergence" style="max-width: 100%;">
+        <p class="has-text-centered" style="margin-top: 10px;"><em>Fast convergence in ~10k steps</em></p>
+      </div>
+    </div>
+
+    <div class="content has-text-justified" style="margin-top: 20px;">
+      <p>
+        <strong>Left:</strong> While training a diffusion model on raw GraspQP samples improves grasp coverage, direct simulator-in-the-loop optimization via evolution produces significantly more feasible and diverse grasps. <strong>Right:</strong> The evolutionary process converges rapidly within 10,000 steps, with most quality improvements occurring in the first few thousand iterations.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="background-color: #fafafa;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-2 has-text-centered">Real-World Deployment</h2>
+
+    <div class="content has-text-justified" style="margin-top: 30px;">
+      <p style="font-size: 1.1em;">
+        We validate our approach on a robotic system with the XHand dexterous gripper. Our diffusion model generates grasps directly from partial point cloud observations, which are then executed using cuRobo motion planning with collision-aware trajectories.
+      </p>
+    </div>
+
+    <div class="columns is-centered" style="margin-top: 40px;">
+      <div class="column is-four-fifths">
+        <div class="content">
+          <video controls width="100%" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <source src="videos/real_world_experiments_trimmed.mp4?v=2" type="video/mp4">
+          </video>
+          <p class="has-text-centered" style="margin-top: 15px; font-size: 1.05em;"><em>Hardware validation showing 20 handle grasping trials (5 types × 4 poses) and object manipulation tasks. Videos are not sped up</em></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="content has-text-centered" style="margin-top: 50px;">
+      <img src="images/action_img.jpg" alt="Real World Deployment" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+      <p style="margin-top: 15px; font-size: 1.05em;"><em>Example rollout sequence showing the robot approaching and grasping cabinet handles with collision-aware motion planning</em></p>
+    </div>
+
+    <div class="content has-text-justified" style="margin-top: 40px;">
+      <p style="font-size: 1.1em;">
+        The system achieves reliable grasping across diverse handle geometries and everyday objects, demonstrating effective sim-to-real transfer.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">IKEA Handles Dataset</h2>
+    <div class="content has-text-centered">
+      <img src="images/handles_dataset.png" alt="Handles Dataset" style="max-width: 100%;">
+    </div>
+    <div class="content has-text-justified">
+      <p>
+        We introduce a new dataset with  handle assets from IKEA, designed for dexterous manipulation research. Each asset includes high-resolution collision meshes for SDF-based simulation, articulated USD files with compliant joints, and realistic material properties.
+      </p>
+      <p>
+        The dataset covers diverse handle geometries including U-shaped, T-shaped, knobs, and bar handles. All assets are ready for Isaac Sim and can be used for grasp synthesis, reinforcement learning, and sim-to-real transfer.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- <section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@inproceedings{zurbrugg2026dexevolve,
+  title={DexEvolve: Evolutionary Optimization for Robust and Diverse Dexterous Grasp Synthesis},
+  author={Zurbr{\"u}gg, Ren{\'e} and Cramariuc, Andrei and Hutter, Marco},
+  booktitle={Robotics: Science and Systems (RSS)},
+  year={2026}
+}</code></pre>
+  </div>
+</section> -->
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        Website template adapted from <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
